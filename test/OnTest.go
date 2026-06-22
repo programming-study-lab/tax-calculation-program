@@ -1,0 +1,34 @@
+package test
+
+import (
+	"cal-tex/controllers"
+	"cal-tex/models"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func OnTest(ctx *gin.Context) {
+
+	allowances := []models.Allowances{}
+
+	allowances = append(allowances, models.Allowances{
+		AllowancesType: "donation",
+		Amount:         0,
+	})
+
+	taxCal := models.TaxCalculator{
+		TotalIncome: 750000,
+		Wht:         0,
+		Allowances:  allowances,
+	}
+
+	ctx.AbortWithStatusJSON(
+		http.StatusOK,
+		gin.H{
+			"status":  true,
+			"message": "success",
+			"data":    controllers.TaxCalculatorController(taxCal),
+		},
+	)
+}

@@ -1,0 +1,13 @@
+โปรแกรมคำนวณภาษี
+
+ระยะเวลา 2-3 วัน
+
+
+## API Endpoints ที่ต้องสร้าง
+1. POST: /tax/calculations
+
+
+********
+package
+   gin
+      github.com/gin-gonic/gin
