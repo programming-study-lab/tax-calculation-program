@@ -18,7 +18,7 @@ func OnTest(ctx *gin.Context) {
 	})
 
 	taxCal := models.TaxCalculator{
-		TotalIncome: 750000,
+		TotalIncome: 1200000,
 		Wht:         0,
 		Allowances:  allowances,
 	}

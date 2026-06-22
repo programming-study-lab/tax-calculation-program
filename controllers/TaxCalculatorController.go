@@ -2,65 +2,123 @@ package controllers
 
 import (
 	"cal-tex/models"
-	"fmt"
 )
 
-func TaxCalculatorController(taxCalculator models.TaxCalculator) float64 {
+func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalculatorResponse {
+
 	var taxResult = 0.0
 	var tax = 0.0
 	const freeTax = 60000
 	var totalIncome = float64(taxCalculator.TotalIncome) - freeTax
 
-	fmt.Printf("\n{totalIncome= %.2f, taxResult = %0.2f} \n", totalIncome, taxResult)
+	taxLevel := []models.TaxLevel{}
+	taxLevel = append(taxLevel,
+		models.TaxLevel{
+			Level: "0-150,000",
+			Tax:   int(taxResult),
+		},
+		models.TaxLevel{
+			Level: "150,001-500,000",
+			Tax:   int(taxResult),
+		},
+		models.TaxLevel{
+			Level: "500,001-1,000,000",
+			Tax:   int(taxResult),
+		},
+		models.TaxLevel{
+			Level: "1,000,001-2,000,000",
+			Tax:   int(taxResult),
+		},
+		models.TaxLevel{
+			Level: "มากกว่า 2,000,000",
+			Tax:   int(taxResult),
+		},
+	)
 
-	tax = 0.1
+	if totalIncome >= 0 {
+		tax = 0.0
+		taxResult = 0
+
+		taxLevel[0] = models.TaxLevel{
+			Level: "0-150,000",
+			Tax:   int(taxResult),
+		}
+	}
 	if totalIncome >= 150001 {
-		taxResult += (500000 - 150000) * tax
-
-		totalIncome -= 500000
-
-		if totalIncome <= 500000 {
-			tax = 0.15
-			taxResult += totalIncome * tax
+		tax = 0.1
+		calTax := (500000 - 150000) * tax
+		taxResult += calTax
+		taxLevel[1] = models.TaxLevel{
+			Level: "150,001-500,000",
+			Tax:   int(calTax),
 		}
-		fmt.Printf("\n{1 totalIncome= %.2f, taxResult = %0.2f} \n", totalIncome, taxResult)
 	}
-
-	tax = 0.15
 	if totalIncome >= 500001 {
-		taxResult += (1000000 - 500000) * tax
+		tax = 0.15
+		calTax := (1000000 - 500000) * tax
+		taxResult += calTax
 
-		totalIncome -= 1000000
-
-		if totalIncome <= 1000000 {
-			taxResult += totalIncome * tax
+		taxLevel[2] = models.TaxLevel{
+			Level: "500,001-1,000,000",
+			Tax:   int(calTax),
 		}
-		fmt.Printf("\n{2 totalIncome= %.2f, taxResult = %0.2f} \n", totalIncome, taxResult)
+	}
+	if totalIncome >= 1000001 {
+		tax = 0.2
+		calTax := (2000000 - 100000) * tax
+		taxResult += calTax
+
+		taxLevel[3] = models.TaxLevel{
+			Level: "1,000,001-2,000,000",
+			Tax:   int(calTax),
+		}
+	}
+	if totalIncome >= 2000001 {
+		tax = 0.35
+		calTax := totalIncome * tax
+		taxResult += calTax
+
+		taxLevel[4] = models.TaxLevel{
+			Level: "มากกว่า 2,000,000",
+			Tax:   int(calTax),
+		}
 	}
 
-	tax = 0.20
-	if totalIncome >= 1000000 {
-		taxResult += (2000000 - 1000000) * tax
+	if tax == 0.1 {
+		taxResult -= (500000 - 150000) * tax
+		calTax := (totalIncome - 150000) * tax
+		taxResult += calTax
 
-		totalIncome -= 2000000
-
-		if totalIncome <= 2000000 {
-			taxResult += totalIncome * tax
+		taxLevel[1] = models.TaxLevel{
+			Level: "150,001-500,000",
+			Tax:   int(calTax),
 		}
-		fmt.Printf("\n{2 totalIncome= %.2f, taxResult = %0.2f} \n", totalIncome, taxResult)
-	}
+	} else if tax == 0.15 {
+		taxResult -= (1000000 - 500000) * tax
+		calTax := (totalIncome - 500000) * tax
+		taxResult += calTax
 
-	tax = 0.35
-	if totalIncome >= 2000000 {
-		taxResult += totalIncome * tax
-		fmt.Printf("\n{2 totalIncome= %.2f, taxResult = %0.2f} \n", totalIncome, taxResult)
+		taxLevel[2] = models.TaxLevel{
+			Level: "500,001-1,000,000",
+			Tax:   int(calTax),
+		}
+	} else if tax == 0.2 {
+		taxResult -= (2000000 - 100000) * tax
+		calTax := (totalIncome - 1000000) * tax
+		taxResult += calTax
+
+		taxLevel[3] = models.TaxLevel{
+			Level: "1,000,001-2,000,000",
+			Tax:   int(calTax),
+		}
 	}
 
 	if taxCalculator.Wht != 0 {
 		taxResult = taxResult - float64(taxCalculator.Wht)
 	}
 
-	fmt.Printf("\n{3 totalIncome= %.2f, taxResult = %0.2f} \n", totalIncome, taxResult)
-
-	return taxResult
+	return models.TaxCalculatorResponse{
+		Tax:      int(taxResult),
+		TaxLevel: taxLevel,
+	}
 }
