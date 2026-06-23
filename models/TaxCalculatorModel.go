@@ -20,5 +20,3 @@ type TaxLevel struct {
 	Level string `json:"level"`
 	Tax   int    `json:"tax"`
 }
-
-// var Allwoances = []AllowancesPayload{}

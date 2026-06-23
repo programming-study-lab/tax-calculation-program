@@ -1,8 +1,8 @@
 package test
 
 import (
-	"cal-tex/controllers"
 	"cal-tex/models"
+	"cal-tex/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +28,7 @@ func OnTest(ctx *gin.Context) {
 		gin.H{
 			"status":  true,
 			"message": "success",
-			"data":    controllers.TaxCalculatorController(taxCal),
+			"data":    services.TaxCalculatorService(taxCal),
 		},
 	)
 }

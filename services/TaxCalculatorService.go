@@ -1,10 +1,10 @@
-package controllers
+package services
 
 import (
 	"cal-tex/models"
 )
 
-func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalculatorResponse {
+func TaxCalculatorService(taxCalculator models.TaxCalculator) models.TaxCalculatorResponse {
 
 	var taxResult = 0.0
 	var tax = 0.0
@@ -19,20 +19,10 @@ func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalcu
 			totalAmount += float64(taxAllowances[i].Amount)
 		}
 
-		// if totalAmount <= 100000 {
-		// 	totalIncome = float64(taxCalculator.TotalIncome) - 100000
-
-		// 	// if totalAmount > 0 {
-		// 	// 	totalIncome += totalAmount
-		// 	// }
-		// }
-
 	}
 
 	if totalAmount > 100000.0 {
 		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - totalAmount
-		// totalIncome = float64(taxCalculator.TotalIncome) - freeTax + (totalAmount - 100000.0 - 100000.0)
-		// fmt.Printf("\naaaaa: %0.2f, %0.2f\n", totalIncome, totalAmount)
 	} else if totalAmount <= 100000.0 {
 		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - totalAmount
 	}
