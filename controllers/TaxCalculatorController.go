@@ -9,7 +9,33 @@ func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalcu
 	var taxResult = 0.0
 	var tax = 0.0
 	const freeTax = 60000
-	var totalIncome = float64(taxCalculator.TotalIncome) - freeTax
+	var totalIncome = 0.0
+	var totalAmount = 0.0
+
+	if len(taxCalculator.Allowances) != 0 {
+		var taxAllowances = taxCalculator.Allowances
+
+		for i := 0; i < len(taxCalculator.Allowances); i++ {
+			totalAmount += float64(taxAllowances[i].Amount)
+		}
+
+		// if totalAmount <= 100000 {
+		// 	totalIncome = float64(taxCalculator.TotalIncome) - 100000
+
+		// 	// if totalAmount > 0 {
+		// 	// 	totalIncome += totalAmount
+		// 	// }
+		// }
+
+	}
+
+	if totalAmount > 100000.0 {
+		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - totalAmount
+		// totalIncome = float64(taxCalculator.TotalIncome) - freeTax + (totalAmount - 100000.0 - 100000.0)
+		// fmt.Printf("\naaaaa: %0.2f, %0.2f\n", totalIncome, totalAmount)
+	} else if totalAmount <= 100000.0 {
+		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - totalAmount
+	}
 
 	taxLevel := []models.TaxLevel{}
 	taxLevel = append(taxLevel,
@@ -30,7 +56,7 @@ func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalcu
 			Tax:   int(taxResult),
 		},
 		models.TaxLevel{
-			Level: "มากกว่า 2,000,000",
+			Level: "2,000,001 ขึ้นไป",
 			Tax:   int(taxResult),
 		},
 	)
@@ -65,7 +91,7 @@ func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalcu
 	}
 	if totalIncome >= 1000001 {
 		tax = 0.2
-		calTax := (2000000 - 100000) * tax
+		calTax := (2000000 - 1000000) * tax
 		taxResult += calTax
 
 		taxLevel[3] = models.TaxLevel{
@@ -79,7 +105,7 @@ func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalcu
 		taxResult += calTax
 
 		taxLevel[4] = models.TaxLevel{
-			Level: "มากกว่า 2,000,000",
+			Level: "2,000,001 ขึ้นไป",
 			Tax:   int(calTax),
 		}
 	}
@@ -103,7 +129,7 @@ func TaxCalculatorController(taxCalculator models.TaxCalculator) models.TaxCalcu
 			Tax:   int(calTax),
 		}
 	} else if tax == 0.2 {
-		taxResult -= (2000000 - 100000) * tax
+		taxResult -= (2000000 - 1000000) * tax
 		calTax := (totalIncome - 1000000) * tax
 		taxResult += calTax
 

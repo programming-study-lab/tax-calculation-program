@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	r := gin.New()
+	r := gin.Default()
 	// api := r.Group("/tax")
 
 	r.GET("test", test.OnTest)
@@ -18,7 +18,7 @@ func main() {
 
 		taxCalculator := models.TaxCalculator{}
 
-		if err := ctx.Bind(&taxCalculator); err != nil {
+		if err := ctx.BindJSON(&taxCalculator); err != nil {
 			ctx.AbortWithStatusJSON(
 				http.StatusInternalServerError,
 				gin.H{

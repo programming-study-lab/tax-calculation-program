@@ -7,8 +7,8 @@ type TaxCalculator struct {
 }
 
 type Allowances struct {
-	AllowancesType string `json: "allowancesType"`
-	Amount         int    `json: "amount"`
+	AllowancesType string `json:"allowancesType"`
+	Amount         int    `json:"amount"`
 }
 
 type TaxCalculatorResponse struct {
