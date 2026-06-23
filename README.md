@@ -1,444 +1,20 @@
-# แบบทดสอบสำหรับตำแหน่งฝึกงาน Backend Developer - โปรแกรมคำนวณภาษี
-
-## ภาพรวม
-สร้าง REST API สำหรับคำนวณภาษีเงินได้บุคคลธรรมดา เพื่อประเมินพื้นฐานการเขียนโปรแกรม Backend
-
-**ระยะเวลา:** 2-3 วัน
-
----
-
-## เกณฑ์การคำนวณภาษี
-
-### ขั้นบันไดภาษี
-| รายได้ | อัตราภาษี |
-|--------|-----------|
-| 0 - 150,000 | ยกเว้น (0%) |
-| 150,001 - 500,000 | 10% |
-| 500,001 - 1,000,000 | 15% |
-| 1,000,001 - 2,000,000 | 20% |
-| มากกว่า 2,000,000 | 35% |
-
-### กฎการคำนวณ
-- **ค่าลดหย่อนส่วนตัว:** 60,000 บาท (ค่าคงที่)
-- **รายได้ที่ต้องเสียภาษี** = รายได้ทั้งหมด - 60,000
-- **WHT (Withholding Tax)** = เงินหัก ณ ที่จ่าย (ถ้ามี)
-- **ภาษีที่ต้องจ่ายจริง** = ภาษีที่คำนวณได้ - WHT
-
-### ตัวอย่างการคำนวณ
-
-**ตัวอย่างที่ 1: รายได้ 750,000 บาท (ไม่มี WHT)**
-````
-รายได้ที่ต้องเสียภาษี = 750,000 - 60,000 = 690,000 บาท
-
-คำนวณภาษี:
-- 0-150,000: 0 บาท
-- 150,001-500,000: 350,000 × 10% = 35,000 บาท
-- 500,001-690,000: 190,000 × 15% = 28,500 บาท
-
-รวมภาษี = 63,500 บาท
-````
-
-**ตัวอย่างที่ 2: รายได้ 600,000 บาท, WHT 15,000 บาท**
-````
-ภาษีที่คำนวณได้: 600,000 - 60,000 = 540,000
-- 0-150,000: 0 บาท
-- 150,001-500,000: 350,000 × 10% = 35,000 บาท
-- 500,001-540,000: 40,000 × 15% = 6,000 บาท
-ภาษีรวม = 41,000 บาท
-
-ภาษีที่ต้องจ่ายจริง = 41,000 - 15,000 = 26,000 บาท
-````
-
----
-
-## API Endpoints ที่ต้องสร้าง
-
-### 1. คำนวณภาษีพื้นฐาน
-
-**Endpoint:**
-````http
-POST /tax/calculations
-Content-Type: application/json
-````
-
-**Request Body:**
-````json
-{
-  "totalIncome": 750000,
-  "wht": 0,
-  "allowances": [
-    {
-      "allowanceType": "donation",
-      "amount": 0
-    }
-  ]
-}
-````
-
-**Response:**
-````json
-{
-  "tax": 63500
-}
-````
-
-### 2. คำนวณภาษีพร้อมรายละเอียดแต่ละขั้น
-
-**Endpoint:**
-````http
-POST /tax/calculations
-Content-Type: application/json
-````
-
-**Request Body:**
-````json
-{
-  "totalIncome": 750000,
-  "wht": 0,
-  "allowances": [
-    {
-      "allowanceType": "donation",
-      "amount": 0
-    }
-  ]
-}
-````
-
-**Response:**
-````json
-{
-  "tax": 63500,
-  "taxLevel": [
-    {
-      "level": "0-150,000",
-      "tax": 0
-    },
-    {
-      "level": "150,001-500,000",
-      "tax": 35000
-    },
-    {
-      "level": "500,001-1,000,000",
-      "tax": 28500
-    },
-    {
-      "level": "1,000,001-2,000,000",
-      "tax": 0
-    },
-    {
-      "level": "2,000,001 ขึ้นไป",
-      "tax": 0
-    }
-  ]
-}
-````
-
-### 3. คำนวณภาษีพร้อม WHT
-
-**Endpoint:**
-````http
-POST /tax/calculations
-Content-Type: application/json
-````
-
-**Request Body:**
-````json
-{
-  "totalIncome": 600000,
-  "wht": 15000,
-  "allowances": [
-    {
-      "allowanceType": "donation",
-      "amount": 0
-    }
-  ]
-}
-````
-
-**Response:**
-````json
-{
-  "tax": 26000
-}
-````
-
-**หมายเหตุ:** ถ้า WHT มากกว่าภาษีที่ต้องจ่าย ให้คืนค่าเป็นลบ (เช่น -5000 หมายถึงได้เงินคืน 5,000 บาท)
-
-### 4. รองรับค่าลดหย่อน (Bonus)
-
-**Endpoint:**
-````http
-POST /tax/calculations
-Content-Type: application/json
-````
-
-**Request Body:**
-````json
-{
-  "totalIncome": 850000,
-  "wht": 0,
-  "allowances": [
-    {
-      "allowanceType": "donation",
-      "amount": 150000
-    }
-  ]
-}
-````
-
-**Response:**
-````json
-{
-  "tax": 56000
-}
-````
-
-**หมายเหตุ:** 
-- เงินบริจาคสามารถหย่อนได้สูงสุด 100,000 บาท
-- ถ้ากรอกเกิน 100,000 ให้ใช้ค่า 100,000 ในการคำนวณ
-
----
-
-## ข้อกำหนดพื้นฐาน
-
-### Must Have
-- ✅ สร้าง API endpoint `POST /tax/calculations`
-- ✅ คำนวณภาษีถูกต้องตามขั้นบันได
-- ✅ รับ-ส่งข้อมูลเป็น JSON
-- ✅ รองรับค่า WHT
-- ✅ Validate input:
-  - totalIncome ต้องเป็นตัวเลข ไม่ติดลบ
-  - wht ต้องเป็นตัวเลข ไม่ติดลบ และไม่เกิน totalIncome
-  - allowances ต้องเป็น array
-- ✅ Error handling และ HTTP Status codes ที่เหมาะสม
-- ✅ มี README.md อธิบายวิธีการรันโปรแกรม
-
-### Nice to Have (Bonus)
-- 🌟 แสดงรายละเอียดภาษีแต่ละขั้นบันได (`taxLevel`)
-- 🌟 รองรับค่าลดหย่อน (allowances) หลายประเภท
-- 🌟 Error message ที่ชัดเจน
-- 🌟 API Documentation (Swagger/Postman Collection)
-- 🌟 Unit Tests
-- 🌟 Code มี structure ที่ดี แยก layer ชัดเจน
-
----
-
-## Test Cases
-
-### Test Case 1: ไม่ต้องเสียภาษี
-**Request:**
-````json
-{
-  "totalIncome": 60000,
-  "wht": 0,
-  "allowances": []
-}
-````
-
-**Expected Response:**
-````json
-{
-  "tax": 0
-}
-````
-
-### Test Case 2: คำนวณภาษีขั้นเดียว
-**Request:**
-````json
-{
-  "totalIncome": 350000,
-  "wht": 0,
-  "allowances": []
-}
-````
-
-**Expected Response:**
-````json
-{
-  "tax": 14000
-}
-````
-
-**คำนวณ:**
-````
-รายได้ที่เสียภาษี: 350,000 - 60,000 = 290,000
-- 0-150,000: 0
-- 150,001-290,000: 140,000 × 10% = 14,000
-รวม: 14,000
-````
-
-### Test Case 3: คำนวณภาษีหลายขั้น
-**Request:**
-````json
-{
-  "totalIncome": 1200000,
-  "wht": 0,
-  "allowances": []
-}
-````
-
-**Expected Response:**
-````json
-{
-  "tax": 144000
-}
-````
-
-**คำนวณ:**
-````
-รายได้ที่เสียภาษี: 1,200,000 - 60,000 = 1,140,000
-- 0-150,000: 0
-- 150,001-500,000: 350,000 × 10% = 35,000
-- 500,001-1,000,000: 500,000 × 15% = 75,000
-- 1,000,001-1,140,000: 140,000 × 20% = 28,000
-รวม: 138,000
-````
-
-### Test Case 4: มี WHT
-**Request:**
-````json
-{
-  "totalIncome": 450000,
-  "wht": 8000,
-  "allowances": []
-}
-````
-
-**Expected Response:**
-````json
-{
-  "tax": 15000
-}
-````
-
-**คำนวณ:**
-````
-รายได้ที่เสียภาษี: 450,000 - 60,000 = 390,000
-ภาษี: (390,000 - 150,000) × 10% = 24,000 - 1,000 = 23,000
-ภาษีที่ต้องจ่าย: 23,000 - 8,000 = 15,000
-````
-
-### Test Case 5: มีค่าลดหย่อน
-**Request:**
-````json
-{
-  "totalIncome": 700000,
-  "wht": 0,
-  "allowances": [
-    {
-      "allowanceType": "donation",
-      "amount": 120000
-    }
-  ]
-}
-````
-
-**Expected Response:**
-````json
-{
-  "tax": 43000
-}
-````
-
-**คำนวณ:**
-````
-เงินบริจาคสูงสุด 100,000 บาท
-รายได้ที่เสียภาษี: 700,000 - 60,000 - 100,000 = 540,000
-- 0-150,000: 0
-- 150,001-500,000: 350,000 × 10% = 35,000
-- 500,001-540,000: 40,000 × 15% = 6,000
-รวม: 41,000
-````
-
-### Test Case 6: Validation - totalIncome ติดลบ
-**Request:**
-````json
-{
-  "totalIncome": -250000,
-  "wht": 0,
-  "allowances": []
-}
-````
-
-**Expected Response:**
-````json
-{
-  "error": "totalIncome must be a positive number"
-}
-````
-**HTTP Status:** 400 Bad Request
-
-### Test Case 7: Validation - wht มากกว่า totalIncome
-**Request:**
-````json
-{
-  "totalIncome": 300000,
-  "wht": 400000,
-  "allowances": []
-}
-````
-
-**Expected Response:**
-````json
-{
-  "error": "wht cannot be greater than totalIncome"
-}
-````
-**HTTP Status:** 400 Bad Request
-
----
-
-## เทคโนโลยีที่แนะนำ
-
-เลือกได้ตามความถนัด:
-- **Node.js:** Express.js, Fastify
-- **Python:** Flask, FastAPI
-- **Go:** net/http, Fiber, Echo
-- **Java:** Spring Boot
-- **PHP:** Laravel, Slim
-- หรือภาษาอื่นๆ ที่ถนัด
-
----
-
-## การส่งงาน
-
-### วิธีการส่ง
-1. Push code ขึ้น GitHub (public repository)
-2. ส่งลิงก์ GitHub repository ใน Discord
-
-### Repository ต้องมี:
-- [ ] Source code ทั้งหมด
-- [ ] README.md ที่มี:
-  - คำอธิบายโปรเจค
-  - เทคโนโลยีที่ใช้
-  - วิธีติดตั้ง dependencies
-  - วิธีรันโปรแกรม
-  - ตัวอย่าง API calls (curl หรือ Postman)
-  - API endpoints ทั้งหมด
-- [ ] โปรแกรมรันได้จริง
-- [ ] ผ่าน Test Cases พื้นฐาน
-- [ ] .gitignore (ไม่ commit node_modules, env files, etc.)
-
-### ตัวอย่าง README.md
-````markdown
 # Tax Calculator API
 
 REST API สำหรับคำนวณภาษีเงินได้บุคคลธรรมดา
 
 ## เทคโนโลยีที่ใช้
-- Python 3.11
-- Flask 3.0
+- Golang 1.26.3
+- Gin v1.12.0 
 
 ## วิธีการติดตั้ง
 ```bash
-pip install -r requirements.txt
+go get github.com/gin-gonic/gin
 ```
 
 ## วิธีการรัน
 ```bash
-python app.py
+go run main.go
 ```
-
 API จะรันที่ `http://localhost:5000`
 
 ## API Endpoints
@@ -449,16 +25,38 @@ API จะรันที่ `http://localhost:5000`
 **Request Body:**
 ```json
 {
-  "totalIncome": 750000,
-  "wht": 0,
-  "allowances": []
+    "totalIncome": 750000,
+    "wht": 0,
+    "allowances": []
 }
 ```
 
-**Response:**
+**Response:***
 ```json
 {
-  "tax": 63500
+    "tax": 63500,
+    "taxLevel": [
+        {
+            "level": "0-150,000",
+            "tax": 0
+        },
+        {
+            "level": "150,001-500,000",
+            "tax": 35000
+        },
+        {
+            "level": "500,001-1,000,000",
+            "tax": 28500
+        },
+        {
+            "level": "1,000,001-2,000,000",
+            "tax": 0
+        },
+        {
+            "level": "มากกว่า 2,000,000",
+            "tax": 0
+        }
+    ]
 }
 ```
 
@@ -485,91 +83,3 @@ curl -X POST http://localhost:5000/tax/calculations \
     "allowances": []
   }'
 ```
-
-## การทดสอบ
-```bash
-pytest
-```
-````
-
----
-
-## เกณฑ์การให้คะแนน
-
-### พื้นฐาน (60 คะแนน)
-- [ ] API รันได้
-- [ ] คำนวณภาษีถูกต้องตาม Test Cases
-- [ ] รองรับ WHT
-- [ ] มี Input Validation พื้นฐาน
-- [ ] Code อ่านง่าย มี comment
-
-### ดี (80 คะแนน)
-- [ ] ครบทุกข้อในระดับพื้นฐาน
-- [ ] Input Validation ครอบคลุม
-- [ ] Error Handling ที่ดี
-- [ ] HTTP Status Codes ถูกต้อง
-- [ ] README ชัดเจน ครบถ้วน
-- [ ] Code Structure ดี
-
-### ดีมาก (100 คะแนน)
-- [ ] ครบทุกข้อในระดับดี
-- [ ] แสดงรายละเอียดภาษีแต่ละขั้นบันได
-- [ ] รองรับค่าลดหย่อนได้
-- [ ] มี Unit Tests
-- [ ] มี API Documentation
-- [ ] Code เป็น Best Practices
-- [ ] Error Message ชัดเจน เป็นมิตร
-
----
-
-## สิ่งที่ไม่ต้องทำ
-
-- ❌ Database (เก็บข้อมูลใน memory หรือไม่เก็บก็ได้)
-- ❌ Authentication/Authorization
-- ❌ Docker (แต่มีจะดีมาก)
-- ❌ Deployment
-- ❌ Frontend
-
----
-
-## เคล็ดลับ
-
-### ✅ ควรทำ
-- เริ่มจาก endpoint พื้นฐานก่อน
-- ทดสอบการคำนวณให้ถูกต้องก่อน
-- ค่อยๆ เพิ่ม features (WHT, allowances, taxLevel)
-- เขียน README ให้ชัดเจน
-- Commit บ่อยๆ พร้อม commit message ที่ดี
-- ใส่ .gitignore ไม่ commit ไฟล์ที่ไม่จำเป็น
-
-### ❌ ไม่ควรทำ
-- เขียนทุก feature พร้อมกันแล้วค่อยทดสอบ
-- ไม่มี error handling เลย
-- Hardcode ค่าต่างๆ
-- ไม่มี README หรือ README ไม่ชัดเจน
-- Commit node_modules หรือ sensitive files
-
----
-
-## คำถามที่พบบ่อย (FAQ)
-
-**Q: ต้อง deploy ขึ้น server ไหม?**  
-A: ไม่ต้อง แค่รันได้ local ก็พอ แต่ถ้ามีจะเป็น bonus
-
-**Q: ต้องมี Unit Tests ไหม?**  
-A: ไม่บังคับ แต่มีจะได้คะแนนเพิ่ม
-
-**Q: ใช้ภาษาอะไรก็ได้เหรอ?**  
-A: ได้ครับ ใช้ภาษาที่ถนัดที่สุด
-
-**Q: API ต้องรันที่ port อะไร?**  
-A: port อะไรก็ได้ แต่ควรระบุใน README
-
-**Q: ติดปัญหาถามได้ไหม?**  
-A: ถามได้ใน Discord
-
----
-
-**ส่งลิงก์ที่:** Discord
-
-**Good luck! 🚀**
