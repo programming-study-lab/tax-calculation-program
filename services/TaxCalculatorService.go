@@ -22,7 +22,7 @@ func TaxCalculatorService(taxCalculator models.TaxCalculator) models.TaxCalculat
 	}
 
 	if totalAmount > 100000.0 {
-		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - totalAmount
+		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - 100000
 	} else if totalAmount <= 100000.0 {
 		totalIncome = float64(taxCalculator.TotalIncome) - freeTax - totalAmount
 	}

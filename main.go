@@ -11,8 +11,5 @@ func main() {
 
 	routers.Tax(r)
 
-	// r.GET("test", test.OnTest)
-	// r.POST("/tax/calculations", )
-
 	r.Run(":5000")
 }
